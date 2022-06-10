@@ -1,36 +1,48 @@
 @objc(RnNativeSettingsViewManager)
 class RnNativeSettingsViewManager: RCTViewManager {
-  @objc
-  override static func requiresMainQueueSetup() -> Bool {
-    return false
-  }
+    @objc
+    override static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
 
-  override func view() -> (RnNativeSettingsView) {
-    return RnNativeSettingsView()
-  }
+    override func view() -> (RnNativeSettingsView) {
+        return RnNativeSettingsView()
+    }
 }
 
 class RnNativeSettingsView : UIView {
-
-  @objc var color: String = "" {
-    didSet {
-      self.backgroundColor = hexStringToUIColor(hexColor: color)
+    @objc var config: String = "" {
+        didSet {
+            initViewControllerIfNeeded()
+        }
     }
-  }
+    var settingsController: SettingsViewController?
 
-  func hexStringToUIColor(hexColor: String) -> UIColor {
-    let stringScanner = Scanner(string: hexColor)
-
-    if(hexColor.hasPrefix("#")) {
-      stringScanner.scanLocation = 1
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if let controller = settingsController {
+            controller.view.frame = self.frame
+        }
     }
-    var color: UInt32 = 0
-    stringScanner.scanHexInt32(&color)
 
-    let r = CGFloat(Int(color >> 16) & 0x000000FF)
-    let g = CGFloat(Int(color >> 8) & 0x000000FF)
-    let b = CGFloat(Int(color) & 0x000000FF)
+    override func removeFromSuperview() {
+        if let controller = settingsController {
+            controller.willMove(toParent: nil)
+            controller.view.removeFromSuperview()
+            controller.removeFromParent()
+            settingsController = nil
+        }
+        super.removeFromSuperview()
+    }
 
-    return UIColor(red: r / 255.0, green: g / 255.0, blue: b / 255.0, alpha: 1)
-  }
+    private func initViewControllerIfNeeded() {
+        DispatchQueue.main.async {
+            if self.settingsController == nil {
+                let controller = SettingsViewController()
+                self.reactAddController(toClosestParent: controller)
+                self.addSubview(controller.view)
+                self.settingsController = controller
+            }
+        }
+    }
 }

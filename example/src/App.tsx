@@ -1,25 +1,12 @@
 import * as React from 'react';
 
-import { StyleSheet, View } from 'react-native';
-import { RnNativeSettingsView } from 'rn-native-settings-view';
+import { StyleSheet } from 'react-native';
+import { SettingsView } from 'rn-native-settings-view';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <RnNativeSettingsView color="#32a852" style={styles.box} />
-    </View>
-  );
+export function App() {
+  return <SettingsView config="TODO" style={Styles.settings} />;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
-  },
+const Styles = StyleSheet.create({
+  settings: { flex: 1 },
 });

@@ -1,6 +1,9 @@
 # rn-native-settings-view
 
-Native component based settings view for React Native
+**Work in Progress** - watch this repo if you are interested.
+
+Native component based settings view for React Native. "It looks native
+because it is native."
 
 ## Installation
 
@@ -11,16 +14,17 @@ npm install rn-native-settings-view
 ## Usage
 
 ```js
-import { RnNativeSettingsViewView } from "rn-native-settings-view";
+import { SettingsView } from "rn-native-settings-view";
 
 // ...
 
-<RnNativeSettingsViewView color="tomato" />
+<SettingsView />
 ```
 
 ## Contributing
 
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to
+the repository and the development workflow.
 
 ## License
 

@@ -1,33 +1,40 @@
 package com.alpha0010.settings
 
 import androidx.preference.PreferenceDataStore
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.WritableMap
 
-class MemoryDataStore(private val onChange: () -> Unit) : PreferenceDataStore() {
+class MemoryDataStore(private val onChange: (data: WritableMap) -> Unit) : PreferenceDataStore() {
   private val booleans = mutableMapOf<String, Boolean>()
 
   override fun putString(key: String, value: String?) {
-    onChange()
+    TODO()
+    onChange(serialize())
   }
 
   override fun putStringSet(key: String, values: Set<String>?) {
-    onChange()
+    TODO()
+    onChange(serialize())
   }
 
   override fun putInt(key: String, value: Int) {
-    onChange()
+    TODO()
+    onChange(serialize())
   }
 
   override fun putLong(key: String, value: Long) {
-    onChange()
+    TODO()
+    onChange(serialize())
   }
 
   override fun putFloat(key: String, value: Float) {
-    onChange()
+    TODO()
+    onChange(serialize())
   }
 
   override fun putBoolean(key: String, value: Boolean) {
     booleans[key] = value
-    onChange()
+    onChange(serialize())
   }
 
   override fun getString(key: String, defValue: String?): String? {
@@ -52,5 +59,13 @@ class MemoryDataStore(private val onChange: () -> Unit) : PreferenceDataStore() 
 
   override fun getBoolean(key: String, defValue: Boolean): Boolean {
     return booleans[key] ?: defValue
+  }
+
+  private fun serialize(): WritableMap {
+    val data = Arguments.createMap()
+    for (entry in booleans) {
+      data.putBoolean(entry.key, entry.value)
+    }
+    return data
   }
 }

@@ -1,20 +1,27 @@
 import React, { useCallback } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import { NativeOnSettings, NativeSettingsView } from './NativeSettingsView';
+import {
+  NativeOnSettings,
+  NativeSettingsView,
+  SettingsBase,
+  SettingsResult,
+} from './NativeSettingsView';
 
-export type SettingsViewProps<T extends string> = {
-  config: string;
-  onChange: (event: Record<T, boolean>) => void;
+export type { SettingsResult } from './NativeSettingsView';
+
+export type SettingsViewProps<Settings extends SettingsBase> = {
+  config: Settings;
+  onChange: (event: SettingsResult<Settings>) => void;
   style: ViewStyle;
 };
 
-export function SettingsView<T extends string>({
+export function SettingsView<Settings extends SettingsBase>({
   config,
   onChange,
   style,
-}: SettingsViewProps<T>) {
+}: SettingsViewProps<Settings>) {
   const nativeOnChange = useCallback(
-    ({ nativeEvent }: NativeOnSettings) => onChange(nativeEvent),
+    ({ nativeEvent }: NativeOnSettings<Settings>) => onChange(nativeEvent),
     [onChange]
   );
 
@@ -23,6 +30,7 @@ export function SettingsView<T extends string>({
       <View style={Styles.container}>
         <NativeSettingsView
           config={config}
+          // @ts-ignore - Not sure how properly type this.
           onChange={nativeOnChange}
           style={Styles.container}
         />

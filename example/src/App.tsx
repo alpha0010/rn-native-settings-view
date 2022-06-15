@@ -7,10 +7,15 @@ function onSettingsChange(event: { switch: boolean }) {
   console.log(event);
 }
 
+const settings = {
+  'switch': { initialValue: true, title: 'Switch from js', type: 'switch' },
+  'is-false': { initialValue: false, title: 'False switch', type: 'switch' },
+} as const;
+
 export function App() {
   return (
     <SettingsView
-      config="TODO"
+      config={settings}
       onChange={onSettingsChange}
       style={Styles.settings}
     />

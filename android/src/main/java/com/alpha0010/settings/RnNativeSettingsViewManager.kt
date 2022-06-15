@@ -5,6 +5,7 @@ import android.view.View
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -27,14 +28,15 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
   }
 
   @ReactProp(name = "config")
-  fun setConfig(view: View, config: String) {
+  fun setConfig(view: View, config: ReadableMap) {
     val fm = getFragmentManager(view) ?: return
     fm.beginTransaction()
-      .replace(view.id, SettingsFragment(MemoryDataStore {
+      .replace(view.id, SettingsFragment(config, MemoryDataStore {
         layoutChildren(view)
         dispatchEvent(view, it)
       }))
       .commit()
+    layoutChildren(view)
   }
 
   private fun dispatchEvent(view: View, event: WritableMap) {

@@ -10,19 +10,45 @@ import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.facebook.react.bridge.ReadableMap
 
-class SettingsFragment(private val dataStore: PreferenceDataStore) : PreferenceFragmentCompat() {
+data class SwitchElement(
+  val key: String,
+  val title: String
+)
+
+class SettingsFragment(config: ReadableMap, private val dataStore: PreferenceDataStore) :
+  PreferenceFragmentCompat() {
+  private val elements = mutableListOf<SwitchElement>()
+
+  init {
+    val keys = config.keySetIterator()
+    while (keys.hasNextKey()) {
+      val key = keys.nextKey()
+      val swData = config.getMap(key)
+      if (swData != null) {
+        val title = swData.getString("title")
+        if (title != null) {
+          dataStore.putBoolean(key, swData.getBoolean("initialValue"))
+          elements.add(SwitchElement(key, title))
+        }
+      }
+    }
+  }
+
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     preferenceManager.preferenceDataStore = dataStore
 
     val context = preferenceManager.context
     val screen = preferenceManager.createPreferenceScreen(context)
 
-    val switchPreference = SwitchPreferenceCompat(context).apply {
-      key = "switch"
-      title = "Sample toggle switch"
+    for (element in elements) {
+      val switchPreference = SwitchPreferenceCompat(context).apply {
+        key = element.key
+        title = element.title
+      }
+      screen.addPreference(switchPreference)
     }
-    screen.addPreference(switchPreference)
 
     preferenceScreen = screen
   }

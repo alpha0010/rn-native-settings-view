@@ -11,7 +11,7 @@ class RnNativeSettingsViewManager: RCTViewManager {
 }
 
 class RnNativeSettingsView : UIView {
-    @objc var config: String = "" {
+    @objc var config: NSDictionary = [:] {
         didSet {
             initViewControllerIfNeeded()
         }
@@ -38,7 +38,10 @@ class RnNativeSettingsView : UIView {
 
     private func initViewControllerIfNeeded() {
         DispatchQueue.main.async {
-            if self.settingsController == nil {
+            if let controller = self.settingsController {
+                controller.setConfig(self.config)
+                controller.tableView.reloadData()
+            } else {
                 let controller = SettingsViewController(MemoryDataStore(
                     onChange: { data in
                         if let dispatch = self.onChange {
@@ -46,6 +49,7 @@ class RnNativeSettingsView : UIView {
                         }
                     }
                 ))
+                controller.setConfig(self.config)
                 self.reactAddController(toClosestParent: controller)
                 self.addSubview(controller.view)
                 self.settingsController = controller

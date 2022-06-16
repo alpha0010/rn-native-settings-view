@@ -8,8 +8,18 @@ function onSettingsChange(event: { switch: boolean }) {
 }
 
 const settings = {
-  'switch': { initialValue: true, title: 'Switch from js', type: 'switch' },
-  'is-false': { initialValue: false, title: 'False switch', type: 'switch' },
+  'switch': {
+    initialValue: true,
+    title: 'Switch from js',
+    type: 'switch',
+    weight: 0,
+  },
+  'is-false': {
+    initialValue: false,
+    title: 'False switch',
+    type: 'switch',
+    weight: 1,
+  },
 } as const;
 
 export function App() {

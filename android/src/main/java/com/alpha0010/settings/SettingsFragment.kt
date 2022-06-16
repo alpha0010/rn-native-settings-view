@@ -14,7 +14,8 @@ import com.facebook.react.bridge.ReadableMap
 
 data class SwitchElement(
   val key: String,
-  val title: String
+  val title: String,
+  val weight: Int
 )
 
 class SettingsFragment(config: ReadableMap, private val dataStore: PreferenceDataStore) :
@@ -30,10 +31,11 @@ class SettingsFragment(config: ReadableMap, private val dataStore: PreferenceDat
         val title = swData.getString("title")
         if (title != null) {
           dataStore.putBoolean(key, swData.getBoolean("initialValue"))
-          elements.add(SwitchElement(key, title))
+          elements.add(SwitchElement(key, title, swData.getInt("weight")))
         }
       }
     }
+    elements.sortBy { it.weight }
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

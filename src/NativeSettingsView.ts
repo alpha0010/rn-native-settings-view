@@ -12,7 +12,12 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo managed workflow\n';
 
-type SwitchSetting = { initialValue: boolean; title: string; type: 'switch' };
+type SwitchSetting = {
+  initialValue: boolean;
+  title: string;
+  type: 'switch';
+  weight: number;
+};
 
 export type SettingsBase = Record<string, SwitchSetting>;
 

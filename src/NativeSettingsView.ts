@@ -23,7 +23,7 @@ export type SettingsResult<Settings extends SettingsBase> = {
 };
 
 export type NativeOnSettings<Settings extends SettingsBase> =
-  NativeSyntheticEvent<SettingsResult<Settings>>;
+  NativeSyntheticEvent<{ data: SettingsResult<Settings> }>;
 
 type NativeSettingsViewProps<Settings extends SettingsBase> = {
   config: Settings;

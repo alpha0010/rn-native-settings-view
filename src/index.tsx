@@ -21,7 +21,7 @@ export function SettingsView<Settings extends SettingsBase>({
   style,
 }: SettingsViewProps<Settings>) {
   const nativeOnChange = useCallback(
-    ({ nativeEvent }: NativeOnSettings<Settings>) => onChange(nativeEvent),
+    (e: NativeOnSettings<Settings>) => onChange(e.nativeEvent.data),
     [onChange]
   );
 

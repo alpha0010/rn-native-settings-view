@@ -42,7 +42,7 @@ class RnNativeSettingsView : UIView {
                 let controller = SettingsViewController(MemoryDataStore(
                     onChange: { data in
                         if let dispatch = self.onChange {
-                            dispatch(data)
+                            dispatch(["data" : data])
                         }
                     }
                 ))

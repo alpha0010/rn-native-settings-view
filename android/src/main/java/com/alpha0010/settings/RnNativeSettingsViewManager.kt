@@ -5,6 +5,7 @@ import android.view.View
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.SimpleViewManager
@@ -44,8 +45,10 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
     if (context !is ThemedReactContext) {
       return
     }
+    val data = Arguments.createMap()
+    data.putMap("data", event)
     context.getJSModule(RCTEventEmitter::class.java)
-      .receiveEvent(view.id, "topChange", event)
+      .receiveEvent(view.id, "topChange", data)
   }
 
   private fun getFragmentManager(view: View): FragmentManager? {

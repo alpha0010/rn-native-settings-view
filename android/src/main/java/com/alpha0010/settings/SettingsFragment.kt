@@ -10,28 +10,31 @@ import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
-
-data class SwitchElement(
-  val key: String,
-  val title: String,
-  val weight: Int
-)
+import com.facebook.react.bridge.ReadableType
 
 class SettingsFragment(config: ReadableMap, private val dataStore: PreferenceDataStore) :
   PreferenceFragmentCompat() {
-  private val elements = mutableListOf<SwitchElement>()
+  private val elements = mutableListOf<PreferenceElement>()
 
   init {
     val keys = config.keySetIterator()
     while (keys.hasNextKey()) {
       val key = keys.nextKey()
-      val swData = config.getMap(key)
-      if (swData != null) {
-        val title = swData.getString("title")
-        if (title != null) {
-          dataStore.putBoolean(key, swData.getBoolean("initialValue"))
-          elements.add(SwitchElement(key, title, swData.getInt("weight")))
+      val elData = config.getMap(key)
+      when (elData?.getString("type")) {
+        "list" -> {
+          val title = elData.getString("title") ?: continue
+          val labels = elData.getArray("labels")?.toStringList() ?: continue
+          val values = elData.getArray("values")?.toStringList() ?: continue
+          dataStore.putString(key, elData.getString("initialValue"))
+          elements.add(ListElement(key, title, labels, values, elData.getInt("weight")))
+        }
+        "switch" -> {
+          val title = elData.getString("title") ?: continue
+          dataStore.putBoolean(key, elData.getBoolean("initialValue"))
+          elements.add(SwitchElement(key, title, elData.getInt("weight")))
         }
       }
     }
@@ -45,11 +48,25 @@ class SettingsFragment(config: ReadableMap, private val dataStore: PreferenceDat
     val screen = preferenceManager.createPreferenceScreen(context)
 
     for (element in elements) {
-      val switchPreference = SwitchPreferenceCompat(context).apply {
-        key = element.key
-        title = element.title
+      when (element) {
+        is ListElement -> {
+          val listPref = SummaryListPreference(context).apply {
+            key = element.key
+            title = element.title
+            dialogTitle = element.title
+            entries = element.labels.toTypedArray()
+            entryValues = element.values.toTypedArray()
+          }
+          screen.addPreference(listPref)
+        }
+        is SwitchElement -> {
+          val switchPref = SwitchPreferenceCompat(context).apply {
+            key = element.key
+            title = element.title
+          }
+          screen.addPreference(switchPref)
+        }
       }
-      screen.addPreference(switchPreference)
     }
 
     preferenceScreen = screen
@@ -80,4 +97,14 @@ class SettingsFragment(config: ReadableMap, private val dataStore: PreferenceDat
     view.setBackgroundColor(0xfffafafa.toInt())
     return view
   }
+}
+
+fun ReadableArray.toStringList(): List<String> {
+  val res = mutableListOf<String>()
+  for (i in 0 until this.size()) {
+    if (this.getType(i) == ReadableType.String) {
+      res.add(this.getString(i))
+    }
+  }
+  return res
 }

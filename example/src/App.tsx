@@ -20,6 +20,14 @@ const settings = {
     type: 'switch',
     weight: 1,
   },
+  'options': {
+    initialValue: 'b',
+    title: 'Current letter',
+    type: 'list',
+    labels: ['The letter A', 'The letter B', 'The letter C'],
+    values: ['a', 'b', 'c'],
+    weight: 3,
+  },
 } as const;
 
 export function App() {

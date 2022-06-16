@@ -12,6 +12,15 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo managed workflow\n';
 
+type ListSetting = {
+  initialValue: string;
+  title: string;
+  type: 'list';
+  labels: ReadonlyArray<string>;
+  values: ReadonlyArray<string>;
+  weight: number;
+};
+
 type SwitchSetting = {
   initialValue: boolean;
   title: string;
@@ -19,11 +28,13 @@ type SwitchSetting = {
   weight: number;
 };
 
-export type SettingsBase = Record<string, SwitchSetting>;
+export type SettingsBase = Record<string, ListSetting | SwitchSetting>;
 
 export type SettingsResult<Settings extends SettingsBase> = {
   [key in keyof Settings]: Settings[key]['type'] extends 'switch'
     ? boolean
+    : Settings[key]['type'] extends 'list'
+    ? string
     : never;
 };
 

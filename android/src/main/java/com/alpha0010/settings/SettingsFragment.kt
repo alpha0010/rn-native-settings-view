@@ -1,11 +1,16 @@
 package com.alpha0010.settings
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.util.TypedValue
+import android.util.TypedValue.TYPE_FIRST_COLOR_INT
+import android.util.TypedValue.TYPE_LAST_COLOR_INT
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EdgeEffect
+import androidx.annotation.ColorInt
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
@@ -81,7 +86,7 @@ class SettingsFragment(config: ReadableMap, private val dataStore: PreferenceDat
     recycler.edgeEffectFactory = object : RecyclerView.EdgeEffectFactory() {
       override fun createEdgeEffect(view: RecyclerView, direction: Int): EdgeEffect {
         val effect = super.createEdgeEffect(view, direction)
-        effect.color = Color.BLACK
+        effect.color = view.context.resolveColor(R.attr.colorControlHighlight, Color.BLACK)
         return effect
       }
     }
@@ -94,8 +99,21 @@ class SettingsFragment(config: ReadableMap, private val dataStore: PreferenceDat
     savedInstanceState: Bundle?
   ): View {
     val view = super.onCreateView(inflater, container, savedInstanceState)
-    view.setBackgroundColor(0xfffafafa.toInt())
+    view.setBackgroundColor(
+      view.context.resolveColor(android.R.attr.colorBackground, 0xfffafafa.toInt())
+    )
     return view
+  }
+}
+
+@ColorInt
+fun Context.resolveColor(resid: Int, @ColorInt default: Int): Int {
+  val result = TypedValue()
+  theme.resolveAttribute(resid, result, true)
+  return if (result.type in TYPE_FIRST_COLOR_INT..TYPE_LAST_COLOR_INT) {
+    result.data
+  } else {
+    default
   }
 }
 

@@ -10,6 +10,13 @@ struct DetailsElement: PreferenceElement {
     let weight: Int
 }
 
+struct RadioElement: PreferenceElement {
+    let key: String
+    let title: String
+    let rowKey: String
+    let weight: Int
+}
+
 struct SwitchElement: PreferenceElement {
     let key: String
     let title: String

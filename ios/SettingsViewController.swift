@@ -26,7 +26,7 @@ class SettingsViewController: UITableViewController {
             guard let key = confKey as? String,
                   let elData = confValue as? NSDictionary,
                   let type = elData["type"] as? String,
-                  let weight = elData["weight"] as? NSNumber
+                  let weight = (elData["weight"] as? NSNumber)?.intValue
             else {
                 continue
             }
@@ -34,13 +34,35 @@ class SettingsViewController: UITableViewController {
             case "details":
                 if let details = elData["details"] as? String,
                    let title = elData["title"] as? String {
-                    elements.append(DetailsElement(key: key, title: title, details: details, weight: weight.intValue))
+                    elements.append(DetailsElement(key: key, title: title, details: details, weight: weight))
+                }
+            case "list":
+                // On iOS, list selection is split over screens. So, only
+                // show the radio control if it is the only element.
+                if let initial = elData["initialValue"] as? String,
+                   let labels = (elData["labels"] as? NSArray)?.toStringArray(),
+                   let title = elData["title"] as? String,
+                   let values = (elData["values"] as? NSArray)?.toStringArray(),
+                   labels.count == values.count {
+                    dataStore.putString(key: key, value: initial)
+                    if config.count == 1 {
+                        for (idx, rowData) in zip(labels, values).enumerated() {
+                            elements.append(RadioElement(key: key, title: rowData.0, rowKey: rowData.1, weight: idx))
+                        }
+                    } else {
+                        // Press event expects client to push screen.
+                        var details = ""
+                        if let idx = values.firstIndex(of: initial) {
+                            details = labels[idx]
+                        }
+                        elements.append(DetailsElement(key: key, title: title, details: details, weight: weight))
+                    }
                 }
             case "switch":
                 if let initial = elData["initialValue"] as? Bool,
                    let title = elData["title"] as? String {
                     dataStore.putBoolean(key: key, value: initial)
-                    elements.append(SwitchElement(key: key, title: title, weight: weight.intValue))
+                    elements.append(SwitchElement(key: key, title: title, weight: weight))
                 }
             default:
                 continue
@@ -65,6 +87,14 @@ class SettingsViewController: UITableViewController {
             }
             cell.textLabel?.text = detailsElem.title
             cell.detailTextLabel?.text = detailsElem.details
+        } else if let radioElem = element as? RadioElement {
+            if let reuse = tableView.dequeueReusableCell(withIdentifier: "RadioRow") {
+                cell = reuse
+            } else {
+                cell = UITableViewCell(style: .default, reuseIdentifier: "RadioRow")
+            }
+            cell.accessoryType = dataStore.getString(key: radioElem.key, defValue: "") == radioElem.rowKey ? .checkmark : .none
+            cell.textLabel?.text = radioElem.title
         } else if let swElem = element as? SwitchElement {
             if let reuse = tableView.dequeueReusableCell(withIdentifier: "SwitchRow") {
                 cell = reuse
@@ -88,9 +118,18 @@ class SettingsViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: false)
+        tableView.deselectRow(at: indexPath, animated: true)
         if let detailsElem = elements[indexPath.row] as? DetailsElement {
             onDetails(detailsElem.key)
+        } else if let radioElem = elements[indexPath.row] as? RadioElement {
+            dataStore.putString(key: radioElem.key, value: radioElem.rowKey)
+            for (idx, element) in elements.enumerated() {
+                guard let row = element as? RadioElement,
+                      let cell = tableView.cellForRow(at: IndexPath(row: idx, section: indexPath.section)) else {
+                    continue
+                }
+                cell.accessoryType = radioElem.rowKey == row.rowKey ? .checkmark : .none
+            }
         }
     }
 
@@ -109,5 +148,17 @@ class SettingsViewController: UITableViewController {
         keyToTag[key] = tag
         tagToKey[tag] = key
         return tag
+    }
+}
+
+extension NSArray {
+    func toStringArray() -> [String] {
+        var res: [String] = []
+        for item in self {
+            if let str = item as? String {
+                res.append(str)
+            }
+        }
+        return res
     }
 }

@@ -17,6 +17,7 @@ class RnNativeSettingsView : UIView {
         }
     }
     @objc var onChange: RCTBubblingEventBlock?
+    @objc var onDetails: RCTBubblingEventBlock?
     var settingsController: SettingsViewController?
 
     override func layoutSubviews() {
@@ -48,7 +49,11 @@ class RnNativeSettingsView : UIView {
                             dispatch(["data" : data])
                         }
                     }
-                ))
+                ), onDetails: { key in
+                    if let dispatch = self.onDetails {
+                        dispatch(["data" : key])
+                    }
+                })
                 controller.setConfig(self.config)
                 self.reactAddController(toClosestParent: controller)
                 self.addSubview(controller.view)

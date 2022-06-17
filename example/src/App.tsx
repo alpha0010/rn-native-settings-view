@@ -28,6 +28,12 @@ const settings = {
     values: ['a', 'b', 'c'],
     weight: 3,
   },
+  'account': {
+    title: 'Account',
+    type: 'details',
+    details: 'user@example.com',
+    weight: 4,
+  },
 } as const;
 
 export function App() {
@@ -35,6 +41,7 @@ export function App() {
     <SettingsView
       config={settings}
       onChange={onSettingsChange}
+      onDetails={console.log}
       style={Styles.settings}
     />
   );

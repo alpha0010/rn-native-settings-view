@@ -12,6 +12,13 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo managed workflow\n';
 
+type DetailsRow = {
+  title: string;
+  type: 'details';
+  details: string;
+  weight: number;
+};
+
 type ListSetting = {
   initialValue: string;
   title: string;
@@ -28,7 +35,9 @@ type SwitchSetting = {
   weight: number;
 };
 
-export type SettingsBase = Record<string, ListSetting | SwitchSetting>;
+type SettingsRow = DetailsRow | ListSetting | SwitchSetting;
+
+export type SettingsBase = Record<string, SettingsRow>;
 
 export type SettingsResult<Settings extends SettingsBase> = {
   [key in keyof Settings]: Settings[key]['type'] extends 'switch'
@@ -41,9 +50,13 @@ export type SettingsResult<Settings extends SettingsBase> = {
 export type NativeOnSettings<Settings extends SettingsBase> =
   NativeSyntheticEvent<{ data: SettingsResult<Settings> }>;
 
+export type NativeOnDetails<Settings extends SettingsBase> =
+  NativeSyntheticEvent<{ data: keyof Settings }>;
+
 type NativeSettingsViewProps<Settings extends SettingsBase> = {
   config: Settings;
   onChange: (event: NativeOnSettings<Settings>) => void;
+  onDetails: (event: NativeOnDetails<Settings>) => void;
   style: ViewStyle;
 };
 

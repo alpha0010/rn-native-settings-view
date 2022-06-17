@@ -31,9 +31,15 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
   fun setConfig(view: View, config: ReadableMap) {
     val dataStore = MemoryDataStore {
       view.post { layoutChildren(view) }
-      dispatchEvent(view, it)
+      val event = Arguments.createMap()
+      event.putMap("data", it)
+      dispatchEvent(view, event)
     }
-    val fragment = SettingsFragment(config, dataStore)
+    val fragment = SettingsFragment(config, dataStore) {
+      val event = Arguments.createMap()
+      event.putString("data", it)
+      dispatchEvent(view, event)
+    }
     view.post {
       val fm = getFragmentManager(view) ?: return@post
       fm.beginTransaction()
@@ -49,10 +55,8 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
     if (context !is ThemedReactContext) {
       return
     }
-    val data = Arguments.createMap()
-    data.putMap("data", event)
     context.getJSModule(RCTEventEmitter::class.java)
-      .receiveEvent(view.id, "topChange", data)
+      .receiveEvent(view.id, "topChange", event)
   }
 
   private fun getFragmentManager(view: View): FragmentManager? {

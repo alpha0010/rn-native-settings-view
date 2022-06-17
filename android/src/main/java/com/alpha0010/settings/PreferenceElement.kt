@@ -5,6 +5,13 @@ sealed class PreferenceElement {
   abstract val weight: Int
 }
 
+data class DetailsElement(
+  override val key: String,
+  val title: String,
+  val details: String,
+  override val weight: Int
+) : PreferenceElement()
+
 data class ListElement(
   override val key: String,
   val title: String,

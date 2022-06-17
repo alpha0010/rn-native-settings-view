@@ -23,6 +23,9 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
     return mapOf(
       "topChange" to mapOf(
         "phasedRegistrationNames" to mapOf("bubbled" to "onChange")
+      ),
+      "topDetails" to mapOf(
+        "phasedRegistrationNames" to mapOf("bubbled" to "onDetails")
       )
     )
   }
@@ -33,12 +36,12 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
       view.post { layoutChildren(view) }
       val event = Arguments.createMap()
       event.putMap("data", it)
-      dispatchEvent(view, event)
+      dispatchEvent(view, "topChange", event)
     }
     val fragment = SettingsFragment(config, dataStore) {
       val event = Arguments.createMap()
       event.putString("data", it)
-      dispatchEvent(view, event)
+      dispatchEvent(view, "topDetails", event)
     }
     view.post {
       val fm = getFragmentManager(view) ?: return@post
@@ -50,13 +53,13 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
     }
   }
 
-  private fun dispatchEvent(view: View, event: WritableMap) {
+  private fun dispatchEvent(view: View, eventName: String, event: WritableMap) {
     val context = view.context
     if (context !is ThemedReactContext) {
       return
     }
     context.getJSModule(RCTEventEmitter::class.java)
-      .receiveEvent(view.id, "topChange", event)
+      .receiveEvent(view.id, eventName, event)
   }
 
   private fun getFragmentManager(view: View): FragmentManager? {

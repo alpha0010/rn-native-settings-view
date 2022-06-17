@@ -8,6 +8,8 @@ class MemoryDataStore(private val onChange: (data: WritableMap) -> Unit) : Prefe
   private val booleans = mutableMapOf<String, Boolean>()
   private val strings = mutableMapOf<String, String>()
 
+  var ready = false
+
   override fun putString(key: String, value: String?) {
     if (value == null) {
       strings.remove(key)
@@ -31,7 +33,9 @@ class MemoryDataStore(private val onChange: (data: WritableMap) -> Unit) : Prefe
   }
 
   private fun dispatchUpdate() {
-    onChange(serialize())
+    if (ready) {
+      onChange(serialize())
+    }
   }
 
   private fun serialize(): WritableMap {

@@ -1,6 +1,5 @@
 package com.alpha0010.settings
 
-import android.view.Choreographer
 import android.view.View
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
@@ -30,14 +29,19 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
 
   @ReactProp(name = "config")
   fun setConfig(view: View, config: ReadableMap) {
-    val fm = getFragmentManager(view) ?: return
-    fm.beginTransaction()
-      .replace(view.id, SettingsFragment(config, MemoryDataStore {
-        layoutChildren(view)
-        dispatchEvent(view, it)
-      }))
-      .commit()
-    layoutChildren(view)
+    val dataStore = MemoryDataStore {
+      view.post { layoutChildren(view) }
+      dispatchEvent(view, it)
+    }
+    val fragment = SettingsFragment(config, dataStore)
+    view.post {
+      val fm = getFragmentManager(view) ?: return@post
+      fm.beginTransaction()
+        .replace(view.id, fragment)
+        .commitNow()
+      layoutChildren(view)
+      dataStore.ready = true
+    }
   }
 
   private fun dispatchEvent(view: View, event: WritableMap) {
@@ -68,12 +72,10 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
    * change without this workaround.
    */
   private fun layoutChildren(view: View) {
-    Choreographer.getInstance().postFrameCallback {
-      view.measure(
-        View.MeasureSpec.makeMeasureSpec(view.measuredWidth, View.MeasureSpec.EXACTLY),
-        View.MeasureSpec.makeMeasureSpec(view.measuredHeight, View.MeasureSpec.EXACTLY)
-      )
-      view.layout(view.left, view.top, view.right, view.bottom)
-    }
+    view.measure(
+      View.MeasureSpec.makeMeasureSpec(view.measuredWidth, View.MeasureSpec.EXACTLY),
+      View.MeasureSpec.makeMeasureSpec(view.measuredHeight, View.MeasureSpec.EXACTLY)
+    )
+    view.layout(view.left, view.top, view.right, view.bottom)
   }
 }

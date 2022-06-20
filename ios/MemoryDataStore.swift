@@ -3,6 +3,8 @@ class MemoryDataStore {
     private var strings = [String : String]()
     private let onChange: (_ data: Dictionary<String, Any>) -> Void
 
+    var ready = false
+
     init(onChange: @escaping (_ data: Dictionary<String, Any>) -> Void) {
         self.onChange = onChange
     }
@@ -26,6 +28,9 @@ class MemoryDataStore {
     }
 
     private func dispatchUpdate() {
+        guard ready else {
+            return
+        }
         onChange(
             (booleans as [String : Any])
                 .merging(strings) { (current, _) in current }

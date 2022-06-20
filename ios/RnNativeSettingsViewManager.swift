@@ -40,8 +40,12 @@ class RnNativeSettingsView : UIView {
     private func initViewControllerIfNeeded() {
         DispatchQueue.main.async {
             if let controller = self.settingsController {
-                controller.setConfig(self.config)
-                controller.tableView.reloadData()
+                let wasStructural = controller.setConfig(self.config)
+                if wasStructural {
+                    controller.tableView.reloadData()
+                } else {
+                    controller.notifyDataChanged()
+                }
             } else {
                 let controller = SettingsViewController(MemoryDataStore(
                     onChange: { data in
@@ -54,7 +58,7 @@ class RnNativeSettingsView : UIView {
                         dispatch(["data" : key])
                     }
                 })
-                controller.setConfig(self.config)
+                _ = controller.setConfig(self.config)
                 self.reactAddController(toClosestParent: controller)
                 self.addSubview(controller.view)
                 self.settingsController = controller

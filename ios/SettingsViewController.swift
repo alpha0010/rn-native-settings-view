@@ -3,6 +3,7 @@ class SettingsViewController: UITableViewController {
     private let onDetails: (_ key: String) -> Void
     private var elements = [PreferenceElement]()
     private var nextTag = 1
+    private var signature = ""
     private var keyToTag = [String : Int]()
     private var tagToKey = [Int : String]()
 
@@ -20,7 +21,9 @@ class SettingsViewController: UITableViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func setConfig(_ config: NSDictionary) {
+    func setConfig(_ config: NSDictionary) -> Bool {
+        dataStore.ready = false
+        var sig = "" // Not fully correct, but should be good enough.
         elements.removeAll()
         for (confKey, confValue) in config {
             guard let key = confKey as? String,
@@ -35,40 +38,48 @@ class SettingsViewController: UITableViewController {
                 if let details = elData["details"] as? String,
                    let title = elData["title"] as? String {
                     elements.append(DetailsElement(key: key, title: title, details: details, weight: weight))
+                    sig += "\(key)-\(title)-"
                 }
             case "list":
                 // On iOS, list selection is split over screens. So, only
                 // show the radio control if it is the only element.
-                if let initial = elData["initialValue"] as? String,
+                if let value = elData["value"] as? String,
                    let labels = (elData["labels"] as? NSArray)?.toStringArray(),
                    let title = elData["title"] as? String,
                    let values = (elData["values"] as? NSArray)?.toStringArray(),
                    labels.count == values.count {
-                    dataStore.putString(key: key, value: initial)
+                    dataStore.putString(key: key, value: value)
                     if config.count == 1 {
                         for (idx, rowData) in zip(labels, values).enumerated() {
                             elements.append(RadioElement(key: key, title: rowData.0, rowKey: rowData.1, weight: idx))
+                            sig += "\(key)-\(rowData.0)-\(rowData.1)-"
                         }
                     } else {
                         // Press event expects client to push screen.
                         var details = ""
-                        if let idx = values.firstIndex(of: initial) {
+                        if let idx = values.firstIndex(of: value) {
                             details = labels[idx]
                         }
                         elements.append(DetailsElement(key: key, title: title, details: details, weight: weight))
+                        sig += "\(key)-\(title)-"
                     }
                 }
             case "switch":
-                if let initial = elData["initialValue"] as? Bool,
+                if let value = elData["value"] as? Bool,
                    let title = elData["title"] as? String {
-                    dataStore.putBoolean(key: key, value: initial)
+                    dataStore.putBoolean(key: key, value: value)
                     elements.append(SwitchElement(key: key, title: title, weight: weight))
+                    sig += "\(key)-\(title)-"
                 }
             default:
                 continue
             }
         }
         elements.sort { $0.weight < $1.weight }
+        dataStore.ready = true
+        let structureDidChange = sig != signature
+        signature = sig
+        return structureDidChange
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -137,6 +148,28 @@ class SettingsViewController: UITableViewController {
         if let key = tagToKey[sw.tag] {
             dataStore.putBoolean(key: key, value: sw.isOn)
         }
+    }
+
+    func notifyDataChanged() {
+        dataStore.ready = false
+        for (idx, element) in elements.enumerated() {
+            guard let cell = tableView.cellForRow(at: IndexPath(row: idx, section: 0)) else {
+                continue
+            }
+            if let detailsElem = element as? DetailsElement {
+                // This element may be the summary for a list selector.
+                cell.detailTextLabel?.text = detailsElem.details
+            } else if let radioElem = element as? RadioElement {
+                cell.accessoryType = dataStore.getString(key: radioElem.key, defValue: "") == radioElem.rowKey ? .checkmark : .none
+            } else if let swElem = element as? SwitchElement,
+                      let sw = cell.accessoryView as? UISwitch {
+                sw.setOn(
+                    dataStore.getBoolean(key: swElem.key, defValue: sw.isOn),
+                    animated: true
+                )
+            }
+        }
+        dataStore.ready = true
     }
 
     private func getTagFor(key: String) -> Int {

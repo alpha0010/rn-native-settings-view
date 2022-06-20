@@ -20,7 +20,7 @@ type DetailsRow = {
 };
 
 type ListSetting = {
-  initialValue: string;
+  value: string;
   title: string;
   type: 'list';
   labels: ReadonlyArray<string>;
@@ -29,7 +29,7 @@ type ListSetting = {
 };
 
 type SwitchSetting = {
-  initialValue: boolean;
+  value: boolean;
   title: string;
   type: 'switch';
   weight: number;

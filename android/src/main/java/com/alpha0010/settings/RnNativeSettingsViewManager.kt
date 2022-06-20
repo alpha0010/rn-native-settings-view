@@ -16,7 +16,19 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
   override fun getName() = "RnNativeSettingsView"
 
   override fun createViewInstance(reactContext: ThemedReactContext): View {
-    return FragmentContainerView(reactContext)
+    val view = FragmentContainerView(reactContext)
+    view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+      override fun onViewAttachedToWindow(v: View) = Unit
+      override fun onViewDetachedFromWindow(v: View) {
+        val fm = getFragmentManager(v)
+        val frag = fm?.findFragmentById(view.id) as? SettingsFragment
+        if (fm != null && frag != null) {
+          fm.beginTransaction().remove(frag).commitNow()
+        }
+        v.removeOnAttachStateChangeListener(this)
+      }
+    })
+    return view
   }
 
   override fun getExportedCustomBubblingEventTypeConstants(): Map<String, Any> {
@@ -32,13 +44,33 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
 
   @ReactProp(name = "config")
   fun setConfig(view: View, config: ReadableMap) {
-    val dataStore = MemoryDataStore {
-      view.post { layoutChildren(view) }
-      val event = Arguments.createMap()
-      event.putMap("data", it)
-      dispatchEvent(view, "topChange", event)
+    val oldFrag = getSettingsFragment(view)
+    val dataStore: MemoryDataStore
+    val confP: ProcessedConfig
+    if (oldFrag != null) {
+      dataStore = oldFrag.dataStore
+      dataStore.ready = false
+      confP = processSettingsConfig(config, dataStore)
+      if (oldFrag.signature == confP.signature) {
+        // Existing fragment has same structure, reuse.
+        view.post {
+          oldFrag.notifyDataChanged()
+          layoutChildren(view)
+          dataStore.ready = true
+        }
+        return
+      }
+    } else {
+      dataStore = MemoryDataStore {
+        view.post { layoutChildren(view) }
+        val event = Arguments.createMap()
+        event.putMap("data", it)
+        dispatchEvent(view, "topChange", event)
+      }
+      confP = processSettingsConfig(config, dataStore)
     }
-    val fragment = SettingsFragment(config, dataStore) {
+
+    val newFrag = SettingsFragment(dataStore, confP.signature, confP.elements) {
       val event = Arguments.createMap()
       event.putString("data", it)
       dispatchEvent(view, "topDetails", event)
@@ -46,7 +78,7 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
     view.post {
       val fm = getFragmentManager(view) ?: return@post
       fm.beginTransaction()
-        .replace(view.id, fragment)
+        .replace(view.id, newFrag)
         .commitNow()
       layoutChildren(view)
       dataStore.ready = true
@@ -54,24 +86,23 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
   }
 
   private fun dispatchEvent(view: View, eventName: String, event: WritableMap) {
-    val context = view.context
-    if (context !is ThemedReactContext) {
-      return
-    }
+    val context = view.context as? ThemedReactContext ?: return
     context.getJSModule(RCTEventEmitter::class.java)
       .receiveEvent(view.id, eventName, event)
   }
 
   private fun getFragmentManager(view: View): FragmentManager? {
-    val context = view.context
-    if (context !is ThemedReactContext) {
-      return null
-    }
+    val context = view.context as? ThemedReactContext ?: return null
     val activity = context.currentActivity
     if (activity === null || activity !is FragmentActivity) {
       return null
     }
     return activity.supportFragmentManager
+  }
+
+  private fun getSettingsFragment(view: View): SettingsFragment? {
+    return getFragmentManager(view)
+      ?.findFragmentById(view.id) as? SettingsFragment
   }
 
   /**

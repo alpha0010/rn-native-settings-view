@@ -12,49 +12,18 @@ import android.view.ViewGroup
 import android.widget.EdgeEffect
 import androidx.annotation.ColorInt
 import androidx.preference.Preference
-import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import androidx.preference.forEach
 import androidx.recyclerview.widget.RecyclerView
-import com.facebook.react.bridge.ReadableArray
-import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.bridge.ReadableType
 
 class SettingsFragment(
-  config: ReadableMap,
-  private val dataStore: PreferenceDataStore,
+  val dataStore: MemoryDataStore,
+  val signature: String,
+  private val elements: List<PreferenceElement>,
   private val onDetails: (key: String) -> Unit
 ) :
   PreferenceFragmentCompat() {
-  private val elements = mutableListOf<PreferenceElement>()
-
-  init {
-    val keys = config.keySetIterator()
-    while (keys.hasNextKey()) {
-      val key = keys.nextKey()
-      val elData = config.getMap(key)
-      when (elData?.getString("type")) {
-        "details" -> {
-          val title = elData.getString("title") ?: continue
-          val details = elData.getString("details") ?: continue
-          elements.add(DetailsElement(key, title, details, elData.getInt("weight")))
-        }
-        "list" -> {
-          val title = elData.getString("title") ?: continue
-          val labels = elData.getArray("labels")?.toStringList() ?: continue
-          val values = elData.getArray("values")?.toStringList() ?: continue
-          dataStore.putString(key, elData.getString("initialValue"))
-          elements.add(ListElement(key, title, labels, values, elData.getInt("weight")))
-        }
-        "switch" -> {
-          val title = elData.getString("title") ?: continue
-          dataStore.putBoolean(key, elData.getBoolean("initialValue"))
-          elements.add(SwitchElement(key, title, elData.getInt("weight")))
-        }
-      }
-    }
-    elements.sortBy { it.weight }
-  }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     preferenceManager.preferenceDataStore = dataStore
@@ -129,6 +98,15 @@ class SettingsFragment(
     )
     return view
   }
+
+  fun notifyDataChanged() {
+    preferenceScreen.forEach {
+      when (it) {
+        is SummaryListPreference -> it.value = dataStore.getString(it.key, it.value)
+        is SwitchPreferenceCompat -> it.isChecked = dataStore.getBoolean(it.key, it.isChecked)
+      }
+    }
+  }
 }
 
 @ColorInt
@@ -140,14 +118,4 @@ fun Context.resolveColor(resid: Int, @ColorInt default: Int): Int {
   } else {
     default
   }
-}
-
-fun ReadableArray.toStringList(): List<String> {
-  val res = mutableListOf<String>()
-  for (i in 0 until this.size()) {
-    if (this.getType(i) == ReadableType.String) {
-      res.add(this.getString(i))
-    }
-  }
-  return res
 }

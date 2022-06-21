@@ -1,5 +1,7 @@
 package com.example.rnnativesettingsview;
 
+import android.os.Bundle;
+
 import com.facebook.react.ReactActivity;
 
 public class MainActivity extends ReactActivity {
@@ -11,5 +13,11 @@ public class MainActivity extends ReactActivity {
   @Override
   protected String getMainComponentName() {
     return "RnNativeSettingsViewExample";
+  }
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    // For React Navigation.
+    super.onCreate(null);
   }
 }

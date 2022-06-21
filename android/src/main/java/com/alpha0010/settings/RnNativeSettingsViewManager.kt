@@ -20,12 +20,8 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
     view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
       override fun onViewAttachedToWindow(v: View) = Unit
       override fun onViewDetachedFromWindow(v: View) {
-        val fm = getFragmentManager(v)
-        val frag = fm?.findFragmentById(view.id) as? SettingsFragment
-        if (fm != null && frag != null) {
-          fm.beginTransaction().remove(frag).commitNow()
-        }
-        v.removeOnAttachStateChangeListener(this)
+        // Mark for re-initialize.
+        getSettingsFragment(v)?.signature = ""
       }
     })
     return view
@@ -93,11 +89,8 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
 
   private fun getFragmentManager(view: View): FragmentManager? {
     val context = view.context as? ThemedReactContext ?: return null
-    val activity = context.currentActivity
-    if (activity === null || activity !is FragmentActivity) {
-      return null
-    }
-    return activity.supportFragmentManager
+    val activity = context.currentActivity as? FragmentActivity
+    return activity?.supportFragmentManager
   }
 
   private fun getSettingsFragment(view: View): SettingsFragment? {

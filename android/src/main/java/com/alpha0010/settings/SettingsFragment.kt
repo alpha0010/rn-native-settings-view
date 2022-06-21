@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class SettingsFragment(
   val dataStore: MemoryDataStore,
-  val signature: String,
+  var signature: String,
   private val elements: List<PreferenceElement>,
   private val onDetails: (key: String) -> Unit
 ) :

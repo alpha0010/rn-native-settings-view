@@ -10,11 +10,15 @@ export const Config = {
     return (await AsyncStorage.getItem(key)) ?? defValue;
   },
 
-  writeBool: async (key: string, value: boolean) => {
-    await AsyncStorage.setItem(key, value ? '1' : '0');
+  writeBool: async (key: string, value: boolean | undefined) => {
+    if (value != null) {
+      await AsyncStorage.setItem(key, value ? '1' : '0');
+    }
   },
 
-  writeString: async (key: string, value: string) => {
-    await AsyncStorage.setItem(key, value);
+  writeString: async (key: string, value: string | undefined) => {
+    if (value != null) {
+      await AsyncStorage.setItem(key, value);
+    }
   },
 };

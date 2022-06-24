@@ -1,16 +1,24 @@
-import { NavigationContainer, useFocusEffect } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { SettingsView } from 'rn-native-settings-view';
+import {
+  mergeChanges,
+  SettingsResult,
+  SettingsSubView,
+  SettingsSubViewProps,
+  SettingsView,
+} from 'rn-native-settings-view';
 
 import { Config } from './Config';
 
 type RootStackParamList = {
-  Settings: { page: string } | undefined;
+  Settings:
+    | { page: keyof Settings; subView?: SettingsSubViewProps; title: string }
+    | undefined;
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
@@ -46,102 +54,74 @@ const defaultSettings = {
   },
 };
 
-function capitalize(str?: string) {
-  if (str != null && str.length > 0) {
-    return str[0].toUpperCase() + str.slice(1);
-  }
-  return str;
-}
+type Settings = typeof defaultSettings;
 
 function SettingsScreen({ navigation, route }: Props) {
   const [settings, setSettings] = React.useState(defaultSettings);
 
-  const settingsOpt = React.useMemo(
-    () => ({ options: settings.options }),
-    [settings.options]
-  );
-
   React.useLayoutEffect(() => {
-    navigation.setOptions({ title: capitalize(route.params?.page) });
+    navigation.setOptions({ title: route.params?.title });
   }, [navigation, route]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const state = { live: true };
-      Promise.all([
-        Config.readBool('switch', defaultSettings.switch.value),
-        Config.readBool('is-false', defaultSettings['is-false'].value),
-        Config.readString('options', defaultSettings.options.value),
-      ]).then(([swVal, ifVal, opVal]) => {
-        if (!state.live) {
-          return;
-        }
-        setSettings((prev) => {
-          return {
-            'switch': { ...prev.switch, value: swVal },
-            'is-false': { ...prev['is-false'], value: ifVal },
-            'options': { ...prev.options, value: opVal },
-            'account': prev.account,
-          };
-        });
-      });
-      return () => {
-        state.live = false;
-      };
-    }, [setSettings])
-  );
+  React.useEffect(() => {
+    const state = { live: true };
+    Promise.all([
+      Config.readBool('switch', defaultSettings.switch.value),
+      Config.readBool('is-false', defaultSettings['is-false'].value),
+      Config.readString('options', defaultSettings.options.value),
+    ]).then(([swVal, ifVal, opVal]) => {
+      if (!state.live) {
+        return;
+      }
+      setSettings((prev) =>
+        mergeChanges(prev, {
+          'switch': swVal,
+          'is-false': ifVal,
+          'options': opVal,
+        })
+      );
+    });
+    return () => {
+      state.live = false;
+    };
+  }, [setSettings]);
 
   const onSettingsChange = React.useCallback(
-    (e: { 'switch': boolean; 'is-false': boolean; 'options': string }) => {
+    (e: SettingsResult<Settings>) => {
       Config.writeBool('switch', e.switch);
       Config.writeBool('is-false', e['is-false']);
       Config.writeString('options', e.options);
-      setSettings((prev) => {
-        return {
-          'switch': { ...prev.switch, value: e.switch },
-          'is-false': { ...prev['is-false'], value: e['is-false'] },
-          'options': { ...prev.options, value: e.options },
-          'account': prev.account,
-        };
-      });
-    },
-    [setSettings]
-  );
-
-  const onOptionsChange = React.useCallback(
-    (e: { options: string }) => {
-      Config.writeString('options', e.options);
-      setSettings((prev) => {
-        return {
-          'switch': prev.switch,
-          'is-false': prev['is-false'],
-          'options': { ...prev.options, value: e.options },
-          'account': prev.account,
-        };
-      });
+      setSettings((prev) => mergeChanges(prev, e));
     },
     [setSettings]
   );
 
   const onDetails = React.useCallback(
-    (page: string) => navigation.push('Settings', { page }),
+    (page: keyof Settings) =>
+      navigation.push('Settings', { page, title: defaultSettings[page].title }),
     [navigation]
   );
 
-  return route.params?.page === 'options' ? (
-    <SettingsView
-      config={settingsOpt}
-      onChange={onOptionsChange}
-      onDetails={onDetails}
-      style={Styles.settings}
-    />
+  const onSubViewRequest = React.useCallback(
+    (page: keyof Settings, subView: SettingsSubViewProps) =>
+      navigation.push('Settings', {
+        page,
+        subView,
+        title: defaultSettings[page].title,
+      }),
+    [navigation]
+  );
+
+  return route.params?.subView != null ? (
+    <SettingsSubView {...route.params.subView} />
   ) : route.params?.page === 'account' ? (
-    <Text>{settings.account.details}</Text>
+    <Text style={Styles.text}>{settings.account.details}</Text>
   ) : (
     <SettingsView
       config={settings}
       onChange={onSettingsChange}
       onDetails={onDetails}
+      onSubViewRequest={onSubViewRequest}
       style={Styles.settings}
     />
   );
@@ -159,4 +139,5 @@ export function App() {
 
 const Styles = StyleSheet.create({
   settings: { flex: 1 },
+  text: { fontSize: 18, padding: 20 },
 });

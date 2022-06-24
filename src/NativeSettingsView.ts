@@ -39,7 +39,7 @@ type SettingsRow = DetailsRow | ListSetting | SwitchSetting;
 
 export type SettingsBase = Record<string, SettingsRow>;
 
-export type SettingsResult<Settings extends SettingsBase> = {
+type SettingsResultStrict<Settings extends SettingsBase> = {
   [key in keyof Settings]: Settings[key]['type'] extends 'switch'
     ? boolean
     : Settings[key]['type'] extends 'list'
@@ -47,8 +47,12 @@ export type SettingsResult<Settings extends SettingsBase> = {
     : never;
 };
 
+export type SettingsResult<Settings extends SettingsBase> = Partial<
+  SettingsResultStrict<Settings>
+>;
+
 export type NativeOnSettings<Settings extends SettingsBase> =
-  NativeSyntheticEvent<{ data: SettingsResult<Settings> }>;
+  NativeSyntheticEvent<{ data: SettingsResultStrict<Settings> }>;
 
 export type NativeOnDetails<Settings extends SettingsBase> =
   NativeSyntheticEvent<{ data: keyof Settings }>;

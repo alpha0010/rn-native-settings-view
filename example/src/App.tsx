@@ -12,6 +12,7 @@ import {
   SettingsSubViewProps,
   SettingsView,
 } from 'rn-native-settings-view';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { Config } from './Config';
 
@@ -50,6 +51,10 @@ const defaultSettings = {
     title: 'Account',
     type: 'details' as const,
     details: 'user@example.com',
+    icon: {
+      font: Icon.getFontFamily(),
+      char: Icon.getRawGlyphMap().person,
+    },
     weight: 4,
   },
 };

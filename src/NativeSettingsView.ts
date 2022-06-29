@@ -12,10 +12,13 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo managed workflow\n';
 
+type FontIcon = { font: string; char: number };
+
 type DetailsRow = {
   title: string;
   type: 'details';
   details: string;
+  icon?: FontIcon;
   weight: number;
 };
 
@@ -25,6 +28,7 @@ type ListSetting = {
   type: 'list';
   labels: ReadonlyArray<string>;
   values: ReadonlyArray<string>;
+  icon?: FontIcon;
   weight: number;
 };
 
@@ -32,6 +36,7 @@ type SwitchSetting = {
   value: boolean;
   title: string;
   type: 'switch';
+  icon?: FontIcon;
   weight: number;
 };
 

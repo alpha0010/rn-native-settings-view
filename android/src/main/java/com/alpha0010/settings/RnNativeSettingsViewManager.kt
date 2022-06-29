@@ -46,7 +46,7 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
     if (oldFrag != null) {
       dataStore = oldFrag.dataStore
       dataStore.ready = false
-      confP = processSettingsConfig(config, dataStore)
+      confP = processSettingsConfig(config, dataStore, view.resources)
       if (oldFrag.signature == confP.signature) {
         // Existing fragment has same structure, reuse.
         view.post {
@@ -63,7 +63,7 @@ class RnNativeSettingsViewManager : SimpleViewManager<View>() {
         event.putMap("data", it)
         dispatchEvent(view, "topChange", event)
       }
-      confP = processSettingsConfig(config, dataStore)
+      confP = processSettingsConfig(config, dataStore, view.resources)
     }
 
     val newFrag = SettingsFragment(dataStore, confP.signature, confP.elements) {

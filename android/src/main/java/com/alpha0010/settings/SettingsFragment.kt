@@ -38,7 +38,7 @@ class SettingsFragment(
             key = element.key
             title = element.title
             summary = element.details
-            isIconSpaceReserved = false
+            icon = element.icon
             onPreferenceClickListener = Preference.OnPreferenceClickListener {
               onDetails(it.key)
               true
@@ -53,7 +53,7 @@ class SettingsFragment(
             dialogTitle = element.title
             entries = element.labels.toTypedArray()
             entryValues = element.values.toTypedArray()
-            isIconSpaceReserved = false
+            icon = element.icon
           }
           screen.addPreference(listPref)
         }
@@ -61,7 +61,7 @@ class SettingsFragment(
           val switchPref = SwitchPreferenceCompat(context).apply {
             key = element.key
             title = element.title
-            isIconSpaceReserved = false
+            icon = element.icon
           }
           screen.addPreference(switchPref)
         }

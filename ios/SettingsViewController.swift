@@ -33,11 +33,12 @@ class SettingsViewController: UITableViewController {
             else {
                 continue
             }
+            let icon = getIcon(data: elData)
             switch type {
             case "details":
                 if let details = elData["details"] as? String,
                    let title = elData["title"] as? String {
-                    elements.append(DetailsElement(key: key, title: title, details: details, weight: weight))
+                    elements.append(DetailsElement(key: key, title: title, details: details, icon: icon, weight: weight))
                     sig += "\(key)-\(title)-"
                 }
             case "list":
@@ -51,7 +52,7 @@ class SettingsViewController: UITableViewController {
                     dataStore.putString(key: key, value: value)
                     if config.count == 1 {
                         for (idx, rowData) in zip(labels, values).enumerated() {
-                            elements.append(RadioElement(key: key, title: rowData.0, rowKey: rowData.1, weight: idx))
+                            elements.append(RadioElement(key: key, title: rowData.0, rowKey: rowData.1, icon: nil, weight: idx))
                             sig += "\(key)-\(rowData.0)-\(rowData.1)-"
                         }
                     } else {
@@ -60,7 +61,7 @@ class SettingsViewController: UITableViewController {
                         if let idx = values.firstIndex(of: value) {
                             details = labels[idx]
                         }
-                        elements.append(DetailsElement(key: key, title: title, details: details, weight: weight))
+                        elements.append(DetailsElement(key: key, title: title, details: details, icon: icon, weight: weight))
                         sig += "\(key)-\(title)-"
                     }
                 }
@@ -68,7 +69,7 @@ class SettingsViewController: UITableViewController {
                 if let value = elData["value"] as? Bool,
                    let title = elData["title"] as? String {
                     dataStore.putBoolean(key: key, value: value)
-                    elements.append(SwitchElement(key: key, title: title, weight: weight))
+                    elements.append(SwitchElement(key: key, title: title, icon: icon, weight: weight))
                     sig += "\(key)-\(title)-"
                 }
             default:
@@ -96,6 +97,7 @@ class SettingsViewController: UITableViewController {
                 cell = UITableViewCell(style: .value1, reuseIdentifier: "DetailsRow")
                 cell.accessoryType = .disclosureIndicator
             }
+            cell.imageView?.image = detailsElem.icon
             cell.textLabel?.text = detailsElem.title
             cell.detailTextLabel?.text = detailsElem.details
         } else if let radioElem = element as? RadioElement {
@@ -105,6 +107,7 @@ class SettingsViewController: UITableViewController {
                 cell = UITableViewCell(style: .default, reuseIdentifier: "RadioRow")
             }
             cell.accessoryType = dataStore.getString(key: radioElem.key, defValue: "") == radioElem.rowKey ? .checkmark : .none
+            cell.imageView?.image = radioElem.icon
             cell.textLabel?.text = radioElem.title
         } else if let swElem = element as? SwitchElement {
             if let reuse = tableView.dequeueReusableCell(withIdentifier: "SwitchRow") {
@@ -116,6 +119,7 @@ class SettingsViewController: UITableViewController {
                 cell.accessoryView = sw
                 cell.selectionStyle = .none
             }
+            cell.imageView?.image = swElem.icon
             cell.textLabel?.text = swElem.title
             if let sw = cell.accessoryView as? UISwitch {
                 sw.tag = getTagFor(key: swElem.key)
@@ -170,6 +174,38 @@ class SettingsViewController: UITableViewController {
             }
         }
         dataStore.ready = true
+    }
+
+    private func getIcon(data: NSDictionary) -> UIImage? {
+        guard let icnData = data["icon"] as? NSDictionary,
+              let codepoint = (icnData["char"] as? NSNumber)?.intValue,
+              let charCode = UnicodeScalar(codepoint),
+              let fontName = icnData["font"] as? String,
+              let font = UIFont(name: fontName, size: 26) else {
+            return nil
+        }
+        let size = 30
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: size, height: size), false, 0.0)
+        guard let context = UIGraphicsGetCurrentContext() else {
+            UIGraphicsEndImageContext()
+            return nil
+        }
+
+        context.saveGState()
+
+        context.addPath(UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: size, height: size), cornerRadius: 6).cgPath)
+        UIColor.gray.setFill()
+        context.closePath()
+        context.fillPath()
+
+        let iconStr = NSAttributedString(string: String(charCode), attributes: [.font: font, .foregroundColor: UIColor.white])
+        let iconBounds = iconStr.size()
+        iconStr.draw(at: CGPoint(x: (size - Int(iconBounds.width)) / 2, y: (size - Int(iconBounds.height)) / 2))
+
+        let rendered = UIGraphicsGetImageFromCurrentImageContext()
+        context.restoreGState()
+        UIGraphicsEndImageContext()
+        return rendered
     }
 
     private func getTagFor(key: String) -> Int {

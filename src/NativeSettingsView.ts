@@ -1,6 +1,9 @@
 import {
+  ColorValue,
   NativeSyntheticEvent,
   Platform,
+  processColor,
+  ProcessedColorValue,
   requireNativeComponent,
   UIManager,
   ViewStyle,
@@ -12,7 +15,17 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo managed workflow\n';
 
-type FontIcon = { font: string; char: number };
+type FontIcon = {
+  font: string;
+  char: number;
+  fg?: number | ColorValue;
+  bg?: number | ColorValue;
+
+  /** For internal use. */
+  fgP?: ProcessedColorValue | null;
+  /** For internal use. */
+  bgP?: ProcessedColorValue | null;
+};
 
 type DetailsRow = {
   title: string;
@@ -80,3 +93,8 @@ export const NativeSettingsView =
     : () => {
         throw new Error(LINKING_ERROR);
       };
+
+export const defaultColors = {
+  fg: processColor(Platform.OS === 'android' ? '#737373' : 'white'),
+  bg: processColor(Platform.OS === 'android' ? 'transparent' : '#8e8e93'),
+};

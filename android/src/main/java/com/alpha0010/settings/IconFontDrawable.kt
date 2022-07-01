@@ -2,40 +2,60 @@ package com.alpha0010.settings
 
 import android.content.res.Resources
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.ColorFilter
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
+import androidx.annotation.ColorInt
 import com.facebook.react.views.text.ReactFontManager
+import kotlin.math.max
 
-class IconFontDrawable(charCode: Int, font: String, res: Resources) : Drawable() {
+class IconFontDrawable(
+  charCode: Int,
+  font: String,
+  @ColorInt val fg: Int,
+  @ColorInt val bg: Int,
+  res: Resources
+) : Drawable() {
+  val signature = "$charCode-$fg-$bg"
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
   private val text = String(intArrayOf(charCode), 0, 1)
-  private val iWidth: Int
-  private val iHeight: Int
+  private val tWidth: Float
+  private val tHeight: Float
 
   init {
+    paint.style = Paint.Style.FILL
     paint.typeface = ReactFontManager.getInstance().getTypeface(font, 0, res.assets)
-    paint.color = Color.GRAY
-    paint.textSize = 85f
-    iWidth = (paint.measureText(text, 0, text.length) + .5).toInt()
-    iHeight = paint.getFontMetricsInt(null)
+
+    // Compute symbol size.
+    paint.textSize = 100f
+    val maxDim = max(
+      paint.measureText(text, 0, text.length),
+      paint.getFontMetricsInt(null).toFloat()
+    )
+    paint.textSize = 8100f / maxDim
+
+    tWidth = paint.measureText(text, 0, text.length)
+    tHeight = paint.getFontMetricsInt(null).toFloat()
   }
 
   override fun draw(canvas: Canvas) {
+    paint.color = bg
+    canvas.drawCircle(47f, 47f, 47f, paint)
+
+    paint.color = fg
     canvas.drawText(
       text,
       0,
       text.length,
-      0f,
-      bounds.bottom.toFloat(),
+      (94 - tWidth) / 2,
+      (94 + tWidth) / 2,
       paint
     )
   }
 
-  override fun getIntrinsicWidth() = iWidth
+  override fun getIntrinsicWidth() = 94
 
-  override fun getIntrinsicHeight() = iHeight
+  override fun getIntrinsicHeight() = 94
 
   override fun setAlpha(alpha: Int) {
     paint.alpha = alpha

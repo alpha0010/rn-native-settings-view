@@ -44,18 +44,17 @@ data class ProcessedConfig(
 
 const val ICON_KEY = "icon"
 
-fun getIcon(data: ReadableMap, res: Resources): Drawable? {
+fun getIcon(data: ReadableMap, res: Resources): IconFontDrawable? {
   val icnData = if (data.hasKey(ICON_KEY) && data.getType(ICON_KEY) == ReadableType.Map) {
     data.getMap(ICON_KEY)
   } else {
     return null
   }
-  val charCode = icnData?.getInt("char")
-  val font = icnData?.getString("font")
-  if (charCode != null && font != null) {
-    return IconFontDrawable(charCode, font, res)
-  }
-  return null
+  val charCode = icnData?.getInt("char") ?: return null
+  val font = icnData.getString("font") ?: return null
+  val fg = icnData.getInt("fgP")
+  val bg = icnData.getInt("bgP")
+  return IconFontDrawable(charCode, font, fg, bg, res)
 }
 
 fun processSettingsConfig(
@@ -75,7 +74,7 @@ fun processSettingsConfig(
         val title = elData.getString("title") ?: continue
         val details = elData.getString("details") ?: continue
         elements.add(DetailsElement(key, title, details, icon, elData.getInt("weight")))
-        signature += "$key-$title-$details-"
+        signature += "$key-$title-$details-${icon?.signature}:"
       }
       "list" -> {
         val title = elData.getString("title") ?: continue
@@ -83,13 +82,13 @@ fun processSettingsConfig(
         val values = elData.getArray("values")?.toStringList() ?: continue
         dataStore.putString(key, elData.getString("value"))
         elements.add(ListElement(key, title, labels, values, icon, elData.getInt("weight")))
-        signature += "$key-$title-$labels-$values-"
+        signature += "$key-$title-$labels-$values-${icon?.signature}:"
       }
       "switch" -> {
         val title = elData.getString("title") ?: continue
         dataStore.putBoolean(key, elData.getBoolean("value"))
         elements.add(SwitchElement(key, title, icon, elData.getInt("weight")))
-        signature += "$key-$title-"
+        signature += "$key-$title-${icon?.signature}:"
       }
     }
   }

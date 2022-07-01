@@ -1,7 +1,14 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { processColor, StyleSheet, View, ViewStyle } from 'react-native';
 import { dispatchEvent, Payload, subscribeEvents } from './event';
 import {
+  defaultColors,
   NativeOnDetails,
   NativeOnSettings,
   NativeSettingsView,
@@ -94,12 +101,43 @@ function useRequestsSubView<Settings extends SettingsBase>({
   return setSubView;
 }
 
+function useProcessedConfig<Settings extends SettingsBase>(
+  config: Settings
+): Settings {
+  return useMemo(() => {
+    let proc = config;
+    for (const [key, value] of Object.entries(config)) {
+      if (value.icon != null) {
+        proc = {
+          ...proc,
+          [key]: {
+            ...value,
+            icon: {
+              ...value.icon,
+              fgP:
+                value.icon.fg == null
+                  ? defaultColors.fg
+                  : processColor(value.icon.fg),
+              bgP:
+                value.icon.bg == null
+                  ? defaultColors.bg
+                  : processColor(value.icon.bg),
+            },
+          },
+        };
+      }
+    }
+    return proc;
+  }, [config]);
+}
+
 export function SettingsView<Settings extends SettingsBase>(
   props: SettingsViewProps<Settings>
 ) {
   const { config, onChange, onDetails, style } = props;
 
   const setSubView = useRequestsSubView(props);
+  const nativeConfig = useProcessedConfig(config);
 
   const nativeOnChange = useCallback(
     (e: NativeOnSettings<Settings>) => {
@@ -127,7 +165,7 @@ export function SettingsView<Settings extends SettingsBase>(
     <View style={style}>
       <View style={Styles.container}>
         <NativeSettingsView
-          config={config}
+          config={nativeConfig}
           // @ts-ignore - Not sure how properly type this.
           onChange={nativeOnChange}
           onDetails={nativeOnDetails}

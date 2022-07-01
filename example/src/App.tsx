@@ -45,6 +45,12 @@ const defaultSettings = {
     type: 'list' as const,
     labels: ['The letter A', 'The letter B', 'The letter C'],
     values: ['a', 'b', 'c'],
+    icon: {
+      fg: 'white',
+      bg: '#43b0ef',
+      font: Icon.getFontFamily(),
+      char: Icon.getRawGlyphMap().search,
+    },
     weight: 3,
   },
   'account': {

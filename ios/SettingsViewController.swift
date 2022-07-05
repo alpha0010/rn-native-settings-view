@@ -181,7 +181,9 @@ class SettingsViewController: UITableViewController {
               let codepoint = (icnData["char"] as? NSNumber)?.intValue,
               let charCode = UnicodeScalar(codepoint),
               let fontName = icnData["font"] as? String,
-              let font = UIFont(name: fontName, size: 26) else {
+              let font = UIFont(name: fontName, size: 26),
+              let fg = RCTConvert.uiColor(icnData["fgP"]),
+              let bg = RCTConvert.uiColor(icnData["bgP"]) else {
             return nil
         }
         let size = 30
@@ -193,12 +195,11 @@ class SettingsViewController: UITableViewController {
 
         context.saveGState()
 
+        bg.setFill()
         context.addPath(UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: size, height: size), cornerRadius: 6).cgPath)
-        UIColor.gray.setFill()
-        context.closePath()
         context.fillPath()
 
-        let iconStr = NSAttributedString(string: String(charCode), attributes: [.font: font, .foregroundColor: UIColor.white])
+        let iconStr = NSAttributedString(string: String(charCode), attributes: [.font: font, .foregroundColor: fg])
         let iconBounds = iconStr.size()
         iconStr.draw(at: CGPoint(x: (size - Int(iconBounds.width)) / 2, y: (size - Int(iconBounds.height)) / 2))
 

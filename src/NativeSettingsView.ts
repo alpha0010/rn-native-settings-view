@@ -1,4 +1,5 @@
 import {
+  Appearance,
   ColorValue,
   NativeSyntheticEvent,
   Platform,
@@ -94,7 +95,14 @@ export const NativeSettingsView =
         throw new Error(LINKING_ERROR);
       };
 
+// Note: This does not handle runtime theme changes.
 export const defaultColors = {
-  fg: processColor(Platform.OS === 'android' ? '#737373' : 'white'),
+  fg: processColor(
+    Platform.OS === 'android'
+      ? Appearance.getColorScheme() === 'dark'
+        ? '#c6c5d0'
+        : '#737373'
+      : 'white'
+  ),
   bg: processColor(Platform.OS === 'android' ? 'transparent' : '#8e8e93'),
 };

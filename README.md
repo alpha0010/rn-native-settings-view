@@ -5,6 +5,11 @@
 Native component based settings view for React Native. "It looks native
 because it is native."
 
+| Android | iOS |
+|:-------:|:---:|
+| <img src="https://user-images.githubusercontent.com/4990928/178061061-310c88ac-3b25-42b7-b1ca-189431602d82.png" width="50%" height="50%"> | <img src="https://user-images.githubusercontent.com/4990928/178061553-f69e521f-95f5-4b4b-8003-736916c99844.png" width="60%" height="60%"> |
+
+
 ## Installation
 
 ```sh

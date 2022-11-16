@@ -99,6 +99,18 @@ class SettingsFragment(
     return view
   }
 
+  override fun onDestroyView() {
+    val lMgr = listView.layoutManager
+    if (lMgr != null) {
+      for (i in lMgr.childCount - 1 downTo 0) {
+        val child = lMgr.getChildAt(i)
+        val parent = child?.parent as? ViewGroup
+        parent?.endViewTransition(child)
+      }
+    }
+    super.onDestroyView()
+  }
+
   fun notifyDataChanged() {
     preferenceScreen.forEach {
       when (it) {

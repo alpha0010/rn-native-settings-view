@@ -80,7 +80,7 @@ class SettingsFragment(
     recycler.edgeEffectFactory = object : RecyclerView.EdgeEffectFactory() {
       override fun createEdgeEffect(view: RecyclerView, direction: Int): EdgeEffect {
         val effect = super.createEdgeEffect(view, direction)
-        effect.color = view.context.resolveColor(R.attr.colorControlHighlight, Color.BLACK)
+        effect.color = view.context.resolveColor(android.R.attr.colorControlHighlight, Color.BLACK)
         return effect
       }
     }
